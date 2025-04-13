@@ -17,18 +17,16 @@ def index(request):
         return render(request, "mail/inbox.html")
 
     # Everyone else is prompted to sign in
-    else:
-        return HttpResponseRedirect(reverse("login"))
+    return HttpResponseRedirect(reverse("login"))
 
 
 @csrf_exempt
 @login_required
 def compose(request):
-
     # Composing a new email must be via POST
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
-
+    
     # Check recipient emails
     data = json.loads(request.body)
     emails = [email.strip() for email in data.get("recipients").split(",")]
@@ -42,6 +40,7 @@ def compose(request):
     for email in emails:
         try:
             user = User.objects.get(email=email)
+            print(user)
             recipients.append(user)
         except User.DoesNotExist:
             return JsonResponse({
@@ -68,13 +67,12 @@ def compose(request):
         for recipient in recipients:
             email.recipients.add(recipient)
         email.save()
-
+        
     return JsonResponse({"message": "Email sent successfully."}, status=201)
 
 
 @login_required
 def mailbox(request, mailbox):
-
     # Filter emails returned based on mailbox
     if mailbox == "inbox":
         emails = Email.objects.filter(
@@ -121,10 +119,9 @@ def email(request, email_id):
         return HttpResponse(status=204)
 
     # Email must be via GET or PUT
-    else:
-        return JsonResponse({
-            "error": "GET or PUT request required."
-        }, status=400)
+    return JsonResponse({
+        "error": "GET or PUT request required."
+    }, status=400)
 
 
 def login_view(request):
@@ -170,7 +167,7 @@ def register(request):
             user.save()
         except IntegrityError as e:
             print(e)
-            return render(request, "mail/register.html", {
+            return render(request, "mail/regist er.html", {
                 "message": "Email address already taken."
             })
         login(request, user)
