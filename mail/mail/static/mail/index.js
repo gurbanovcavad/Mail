@@ -46,7 +46,7 @@ function load_mailbox(mailbox) {
     } else {
       for(let i = 0, ln = data.length; i < ln; i++) {
         let element = data[i];
-        var email = document.createElement("div");
+        let email = document.createElement("div");
         email.style.border = "1px solid black";
         email.style.borderRadius = "5px";
         email.style.marginBottom = "7px";
@@ -101,16 +101,50 @@ function view_email(id, mailbox) {
       recipients += data.recipients[0];
       for(let i = 1, n = data.recipients.length; i < n; ++i) recipients += ", " + data.recipients[i];
       div.style.fontWeight = "100";
-      div.innerHTML = `
-        <div><span class="bold">From:<span/> ${data.sender}</div> 
-        <div><span class="bold">To:<span/> ${recipients}</div> 
-        <div><span class="bold">Subject:<span/> ${data.subject}</div> 
-        <div><span class="bold">Timestamp:<span/> ${data.timestamp}</div> 
-        <button class="btn btn-sm btn-outline-primary" id="inbox">Reply</button>
-        <hr>
-        <p>${data.body}<p/>
-      `;
+      if(mailbox === 'inbox') {
+        let btn = (data.archived ? 'Unarchive' : 'Archive');
+        div.innerHTML = `
+          <div><span class="bold">From:<span/> ${data.sender}</div> 
+          <div><span class="bold">To:<span/> ${recipients}</div> 
+          <div><span class="bold">Subject:<span/> ${data.subject}</div> 
+          <div><span class="bold">Timestamp:<span/> ${data.timestamp}</div> 
+          <button class="btn btn-sm btn-outline-primary" id="reply">Reply</button>
+          <button class="btn btn-sm btn-outline-primary" id="archive">${btn}</button>
+          <hr>
+          <p>${data.body}<p/>
+        `;
+      } else {  
+        div.innerHTML = `
+          <div><span class="bold">From:<span/> ${data.sender}</div> 
+          <div><span class="bold">To:<span/> ${recipients}</div> 
+          <div><span class="bold">Subject:<span/> ${data.subject}</div> 
+          <div><span class="bold">Timestamp:<span/> ${data.timestamp}</div> 
+          <button class="btn btn-sm btn-outline-primary" id="inbox">Reply</button>
+          <hr>
+          <p>${data.body}<p/>
+        `;
+      }
       emails.append(div);
+      if(mailbox === 'inbox') {
+        document.querySelector("#archive").addEventListener('click', () => {
+          if(data.archived) {
+            fetch(`/emails/${id}`, {
+              method: "PUT",
+              body: JSON.stringify({
+                archived: false
+              })
+            })
+          } else {
+            fetch(`/emails/${id}`, {
+              method: "PUT",
+              body: JSON.stringify({
+                archived: true
+              })
+            })  
+          }
+          load_mailbox('inbox');
+        });
+      }
     }
   });
 }
