@@ -44,22 +44,75 @@ function load_mailbox(mailbox) {
     if(data.error) {
       console.log(data.error);
     } else {
-      data.forEach(element => {
+      for(let i = 0, ln = data.length; i < ln; i++) {
+        let element = data[i];
         var email = document.createElement("div");
         email.style.border = "1px solid black";
         email.style.borderRadius = "5px";
         email.style.marginBottom = "7px";
         email.style.height = "37px";
         email.style.alignContent = "center";
-        email.innerHTML = `<span style="font-size:16px; font-weight: bold; margin-left:10px;">${element.sender}<span/> <span style="font-size: 14px; font-weight: 600; margin-left: 20px;">${element.subject}<span/> <span style="margin-left:670px; color: gray; font-size: 11px;">${element.timestamp}<span/>` 
+        email.style.cursor = 'pointer';
+        email.innerHTML = `<span style="font-size:16px; font-weight: bold; margin-left:10px;">${element.sender}<span/> 
+        <span style="font-size: 14px; font-weight: 600; margin-left: 20px;">${element.subject}<span/> 
+        <span style="margin-left:670px; color: gray; font-size: 11px;">${element.timestamp}<span/>` 
         if(element.read === true) {
           email.style.backgroundColor = "rgb(217, 217, 217)";
           email.style.color = "rgb(1, 1, 133)";
         } 
+        let ok = false;
+        email.addEventListener('click', () => {
+          view_email(element.id, mailbox);
+          ok = true;
+        })  
+        if(ok) break;
         emails.append(email);
-      });
+      }
     }
+  });
+}
+
+function view_email(id, mailbox) {
+  emails = document.querySelector('#emails-view');
+  emails.innerHTML = "";
+  fetch(`/emails/${id}`, {
+    method: 'GET'
   })
+  .then(response => {
+    if(response.ok) {
+      console.log(response);
+    }
+    return response.json();
+  })
+  .then(data => {
+    if(data.error) {
+      console.log(data.error);
+    } else {
+      console.log(data);
+      fetch(`/emails/${id}`, {
+        method: 'PUT', 
+        body: JSON.stringify({
+          archived: true
+      })
+      })
+      let div = document.createElement('div');
+      div.classList.add('email');
+      let recipients = "";
+      recipients += data.recipients[0];
+      for(let i = 1, n = data.recipients.length; i < n; ++i) recipients += ", " + data.recipients[i];
+      div.style.fontWeight = "100";
+      div.innerHTML = `
+        <div><span class="bold">From:<span/> ${data.sender}</div> 
+        <div><span class="bold">To:<span/> ${recipients}</div> 
+        <div><span class="bold">Subject:<span/> ${data.subject}</div> 
+        <div><span class="bold">Timestamp:<span/> ${data.timestamp}</div> 
+        <button class="btn btn-sm btn-outline-primary" id="inbox">Reply</button>
+        <hr>
+        <p>${data.body}<p/>
+      `;
+      emails.append(div);
+    }
+  });
 }
 
 function send_email() {
