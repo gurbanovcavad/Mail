@@ -119,12 +119,15 @@ function view_email(id, mailbox) {
           <div><span class="bold">To:<span/> ${recipients}</div> 
           <div><span class="bold">Subject:<span/> ${data.subject}</div> 
           <div><span class="bold">Timestamp:<span/> ${data.timestamp}</div> 
-          <button class="btn btn-sm btn-outline-primary" id="inbox">Reply</button>
+          <button class="btn btn-sm btn-outline-primary" id="reply">Reply</button>
           <hr>
           <p>${data.body}<p/>
         `;
       }
       emails.append(div);
+      document.querySelector("#reply").addEventListener('click', () => {
+        reply(data);
+      })
       if(mailbox === 'inbox') {
         document.querySelector("#archive").addEventListener('click', () => {
           if(data.archived) {
@@ -147,6 +150,18 @@ function view_email(id, mailbox) {
       }
     }
   });
+}
+
+function reply(data) {
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'block';
+
+  let recipients = document.querySelector('#compose-recipients');
+  recipients.value = data.sender;
+  recipients.disabled = true;
+  let subject = document.querySelector('#compose-subject');
+  subject.value = data.subject;
+  document.querySelector('#compose-body').value = `On ${data.timestamp} ${data.sender} wrote: ${data.body}`;
 }
 
 function send_email() {
